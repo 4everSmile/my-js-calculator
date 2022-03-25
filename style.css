@@ -1,0 +1,43 @@
+html, body {
+  margin: 0;
+  background-color: #F0FFF0;
+  font-family: sans-serif;
+  padding: 10px 20px;
+}
+
+h2 {
+  font-size: 40px;
+  text-align: center;
+}
+
+input[type="text"] {
+  padding: 12px 20px;
+  font-size: 150%;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 100px;
+}
+.calc-button {
+  min-width: 80px;
+  min-height: 80px;
+  font-size: 30px;
+}
+
+.text-align-center {
+  text-align: center;
+}
+.calc-button1 {
+min-width: 80px;
+min-height: 80px;
+font-size: 30px;
+}
+
+.calc-button2 {
+  min-width: 165px;
+  min-height: 80px;
+  font-size: 30px;
+  background-color: #F08080;
+}
