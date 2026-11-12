@@ -1,9 +1,9 @@
 import { useEffect, useReducer } from "react";
-import styles from "./Calculator.module.css";
-import { calculatorReducer, initialState } from "./calculatorReducer.ts";
-import { actionFromKey } from "./keys.ts";
-import { Display } from "./Display.tsx";
-import { Keypad } from "./Keypad.tsx";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { calculatorReducer, initialState } from "./calculatorReducer";
+import { Display } from "./Display";
+import { Keypad } from "./Keypad";
+import { actionFromKey } from "./keys";
 
 export function Calculator() {
   const [state, dispatch] = useReducer(calculatorReducer, initialState);
@@ -21,9 +21,15 @@ export function Calculator() {
   }, []);
 
   return (
-    <section className={styles.calculator} aria-label="Calculator">
-      <Display expression={state.expression} error={state.error} />
-      <Keypad onAction={dispatch} />
+    <section aria-label="Calculator" className="w-full max-w-sm">
+      <Card>
+        <CardHeader>
+          <Display expression={state.expression} error={state.error} />
+        </CardHeader>
+        <CardContent>
+          <Keypad onAction={dispatch} />
+        </CardContent>
+      </Card>
     </section>
   );
 }

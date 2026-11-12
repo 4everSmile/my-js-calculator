@@ -1,7 +1,15 @@
 import { memo } from "react";
-import styles from "./Calculator.module.css";
-import type { CalculatorAction } from "./calculatorReducer.ts";
-import { KEYPAD } from "./keys.ts";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { CalculatorAction } from "./calculatorReducer";
+import { KEYPAD, type KeyDef } from "./keys";
+
+const VARIANT: Record<NonNullable<KeyDef["variant"]> | "digit", "default" | "secondary" | "outline" | "destructive"> = {
+  digit: "outline",
+  operator: "secondary",
+  clear: "destructive",
+  equals: "default",
+};
 
 type KeypadProps = {
   onAction: (action: CalculatorAction) => void;
@@ -9,19 +17,18 @@ type KeypadProps = {
 
 export const Keypad = memo(function Keypad({ onAction }: KeypadProps) {
   return (
-    <div className={styles.keypad}>
+    <div className="grid grid-cols-4 gap-2">
       {KEYPAD.map((key) => (
-        <button
+        <Button
           key={key.label}
           type="button"
-          className={styles.key}
-          data-variant={key.variant}
-          data-wide={key.wide || undefined}
+          variant={VARIANT[key.variant ?? "digit"]}
           aria-label={key.ariaLabel}
+          className={cn("h-16 text-2xl", key.wide && "col-span-2")}
           onClick={() => onAction(key.action)}
         >
           {key.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
