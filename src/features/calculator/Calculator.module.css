@@ -1,0 +1,75 @@
+.calculator {
+  inline-size: min(100%, 22rem);
+  margin-inline: auto;
+  display: grid;
+  gap: 1rem;
+}
+
+.display {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.expression {
+  display: block;
+  min-block-size: 3.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  font-size: 1.75rem;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  min-block-size: 1.25rem;
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  text-align: end;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.key {
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-key);
+  color: inherit;
+  font: inherit;
+  font-size: 1.75rem;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.key:hover {
+  background: var(--color-key-hover);
+}
+
+.key:active {
+  transform: translateY(1px);
+}
+
+.key:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.key[data-variant="operator"] {
+  background: var(--color-operator);
+}
+
+.key[data-variant="equals"] {
+  background: var(--color-accent);
+}
+
+.key[data-wide] {
+  grid-column: span 2;
+  aspect-ratio: auto;
+}
