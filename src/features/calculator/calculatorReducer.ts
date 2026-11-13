@@ -98,12 +98,18 @@ function reduce(state: CalculatorState, action: CalculatorAction): CalculatorSta
       if (state.memoryRecalled) return { ...state, memory: 0 };
       // Replace the number being typed (or the shown result), or append after an operator.
       const base = state.showingResult ? "" : state.expression.replace(TRAILING_NUMBER, "");
-      return {
-        ...state,
-        expression: base + formatResult(state.memory),
-        error: null,
-        showingResult: true,
-      };
+      try {
+        return {
+          ...state,
+          expression: base + formatResult(state.memory),
+          error: null,
+          showingResult: true,
+        };
+      } catch (error) {
+        // Memory can grow past what the display fits after repeated M+.
+        if (error instanceof EvaluationError) return { ...state, error: error.message };
+        throw error;
+      }
     }
   }
 }

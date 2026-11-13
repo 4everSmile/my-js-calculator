@@ -30,7 +30,7 @@ export const KEYPAD: readonly KeyDef[] = [
   command("pink", "M−", "Memory subtract", "memorySubtract"),
   command("pink", "M+", "Memory add", "memoryAdd"),
   command("pink", "√", "Square root", "sqrt"),
-  input("pink", "%", "%", "Modulo"),
+  input("pink", "%", "%", "Percent"),
 
   command("yellow", "→", "Backspace", "backspace"),
   input("yellow", "7"),
