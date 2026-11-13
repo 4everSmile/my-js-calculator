@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
+import { LCD_CELLS } from "./lcd";
 
-/** Number of LCD character cells. */
-const CELLS = 10;
 
 /**
  * Operators are drawn in the UI font — 14-segment glyphs for "%", "*", "/" are
- * unreadable. Each still occupies exactly one LCD cell, so CELLS always fit.
+ * unreadable. Each still occupies exactly one LCD cell, so LCD_CELLS always fit.
  */
 const OPERATOR_GLYPHS: Record<string, string> = {
   "+": "+",
@@ -75,7 +74,7 @@ type DisplayProps = {
 
 export function Display({ expression, error, hasMemory }: DisplayProps) {
   const text = expression || "0";
-  const visible = lastCells(tokenize(text), CELLS);
+  const visible = lastCells(tokenize(text), LCD_CELLS);
 
   return (
     <div className="min-w-0 rounded-[1.75rem] bg-calc-bezel p-3 shadow-[inset_0_2px_4px_rgb(0_0_0/0.08)]">
@@ -88,7 +87,7 @@ export function Display({ expression, error, hasMemory }: DisplayProps) {
           {error ? " E" : ""}
         </span>
         {/*
-          Size the digits from the LCD width so CELLS always fit: each DSEG14 cell is
+          Size the digits from the LCD width so LCD_CELLS always fit: each DSEG14 cell is
           0.816em wide, so 10 cells = 8.16em → font-size ≤ 100cqw / 8.16 ≈ 12.25cqw.
           `@container` also stops long content from widening the calculator.
         */}

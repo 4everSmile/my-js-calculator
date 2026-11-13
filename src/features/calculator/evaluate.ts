@@ -3,12 +3,20 @@
  *
  * Grammar (lowest → highest precedence):
  *   expression := term (("+" | "-") term)*
- *   term       := unary (("*" | "/" | "%") unary)*
- *   unary      := ("+" | "-") unary | power
- *   power      := number ("**" unary)?        // right-associative
+ *   term       := unary (("*" | "/") unary)*
+ *   unary      := ("+" | "-") unary | power "%"?
+ *   power      := number ("**" signed)?       // right-associative; signed = unary without "%"
  *
  * Unary minus binds looser than `**`, so `-2**2 === -4` (math convention).
+ *
+ * "%" is percent, as on a desk calculator: `B%` is B / 100, except that in
+ * `A + B%` and `A − B%` it is B percent *of A*:
+ *   9%        → 0.09        50 × 10% → 5
+ *   200 + 10% → 220         50 ÷ 10% → 500
+ *   200 − 10% → 180
  */
+
+import { LCD_CELLS, cellCount } from "./lcd";
 
 export class EvaluationError extends Error {
   override name = "EvaluationError";
@@ -43,6 +51,9 @@ function tokenize(input: string): Token[] {
   return tokens;
 }
 
+/** A parsed operand, remembering whether it was written as a percentage. */
+type Operand = { value: number; isPercent: boolean };
+
 class Parser {
   #tokens: Token[];
   #pos = 0;
@@ -64,43 +75,49 @@ class Parser {
   }
 
   #expression(): number {
-    let left = this.#term();
+    let left = this.#term().value;
     for (let op = this.#peekOp("+", "-"); op; op = this.#peekOp("+", "-")) {
       this.#pos++;
       const right = this.#term();
-      left = op === "+" ? left + right : left - right;
+      // "A + B%" adds B percent of A.
+      const amount = right.isPercent ? left * right.value : right.value;
+      left = op === "+" ? left + amount : left - amount;
     }
     return left;
   }
 
-  #term(): number {
+  #term(): Operand {
     let left = this.#unary();
-    for (let op = this.#peekOp("*", "/", "%"); op; op = this.#peekOp("*", "/", "%")) {
+    for (let op = this.#peekOp("*", "/"); op; op = this.#peekOp("*", "/")) {
       this.#pos++;
-      const right = this.#unary();
-      if ((op === "/" || op === "%") && right === 0) {
-        throw new EvaluationError("Division by zero");
-      }
-      left = op === "*" ? left * right : op === "/" ? left / right : left % right;
+      const right = this.#unary().value;
+      if (op === "/" && right === 0) throw new EvaluationError("Division by zero");
+      left = { value: op === "*" ? left.value * right : left.value / right, isPercent: false };
     }
     return left;
   }
 
-  #unary(): number {
+  #unary(allowPercent = true): Operand {
     const op = this.#peekOp("+", "-");
     if (op) {
       this.#pos++;
-      const value = this.#unary();
-      return op === "-" ? -value : value;
+      const operand = this.#unary(allowPercent);
+      return { ...operand, value: op === "-" ? -operand.value : operand.value };
     }
-    return this.#power();
+    const value = this.#power();
+    if (allowPercent && this.#peekOp("%")) {
+      this.#pos++;
+      return { value: value / 100, isPercent: true };
+    }
+    return { value, isPercent: false };
   }
 
   #power(): number {
     const base = this.#number();
     if (this.#peekOp("**")) {
       this.#pos++;
-      return base ** this.#unary();
+      // "2**3%" is (2**3)%, so the exponent itself can't take a "%".
+      return base ** this.#unary(false).value;
     }
     return base;
   }
@@ -120,7 +137,30 @@ export function evaluate(expression: string): number {
   return result;
 }
 
-/** Trims floating-point noise, e.g. 0.1 + 0.2 → "0.3". */
-export function formatResult(value: number): string {
-  return String(Number.parseFloat(value.toPrecision(12)));
+/** Plain decimal notation — never "1e-7", which the parser can't read back. */
+function toPlain(value: number, maxCells: number): string {
+  const text = String(value);
+  if (!text.includes("e")) return text;
+  // Tiny numbers become 0.000…; huge ones (≥ 1e21) stay in "e" form and the caller rejects them.
+  const sign = value < 0 ? 1 : 0;
+  const fixed = value.toFixed(maxCells - 1 - sign).replace(/\.?0+$/, "");
+  return fixed === "-0" ? "0" : fixed;
+}
+
+/**
+ * Rounds a result to fit the display, like a real calculator: as many significant
+ * digits as fit in `maxCells` (a "-" takes a cell, "." doesn't). Also trims
+ * floating-point noise, e.g. 0.1 + 0.2 → "0.3" and 79 / 6 → "13.16666667".
+ * Throws if the whole-number part alone doesn't fit.
+ */
+export function formatResult(value: number, maxCells = LCD_CELLS): string {
+  for (let digits = maxCells; digits >= 1; digits--) {
+    const text = toPlain(Number.parseFloat(value.toPrecision(digits)), maxCells);
+    const wholePart = text.split(".")[0] ?? text;
+    if (wholePart.length > maxCells || text.includes("e")) {
+      throw new EvaluationError("Result is too large");
+    }
+    if (cellCount(text) <= maxCells) return text;
+  }
+  return "0";
 }

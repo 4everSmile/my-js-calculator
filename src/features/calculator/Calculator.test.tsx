@@ -38,6 +38,22 @@ describe("<Calculator />", () => {
     expect(display).toHaveTextContent(/^58$/);
   });
 
+  it("rounds results to fit the LCD instead of cutting off the front", async () => {
+    const { user, display } = setup();
+    await user.keyboard("79/6{Enter}");
+    expect(display).toHaveTextContent(/^13\.16666667$/);
+    await user.keyboard("{Escape}999999*99999{Enter}");
+    expect(screen.getByRole("alert")).toHaveTextContent("Result is too large");
+  });
+
+  it("calculates percentages like a desk calculator", async () => {
+    const { display, press } = setup();
+    await press("9", "Percent", "Equals");
+    expect(display).toHaveTextContent(/^0\.09$/);
+    await press("All clear", "2", "0", "0", "Add", "1", "0", "Percent", "Equals");
+    expect(display).toHaveTextContent(/^220$/);
+  });
+
   it("raises to a power with the ** key", async () => {
     const { display, press } = setup();
     await press("2", "Power", "8", "Equals");
