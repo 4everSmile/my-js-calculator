@@ -100,7 +100,7 @@ export function Display({ expression, error, hasMemory }: DisplayProps) {
           </div>
         </div>
       </div>
-      <p role="alert" className="min-h-5 px-2 pt-1.5 text-right text-xs font-medium text-primary">
+      <p role="alert" className="h-6 truncate px-2 pt-1.5 text-right text-xs leading-4 font-medium text-primary">
         {error}
       </p>
     </div>
