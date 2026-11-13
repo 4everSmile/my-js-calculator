@@ -77,7 +77,17 @@ describe("formatResult", () => {
     expect(formatResult(value)).toBe(expected);
   });
 
-  it.each([1e10, -1e10, 9_999_999_999.6, 1e21, 1e300])("rejects %d as too large", (value) => {
-    expect(() => formatResult(value)).toThrow("Result is too large");
+  it.each([
+    [1e10, "10000000000"],
+    [-1e10, "-10000000000"],
+    [9_999_999_999.6, "10000000000"],
+    [12_345_678_901.4, "12345678901"],
+    [1e21, "1000000000000000000000"], // never "1e+21"
+  ])("keeps every digit of a too-long result %d: %s", (value, expected) => {
+    expect(formatResult(value)).toBe(expected);
+  });
+
+  it("writes huge results as plain digits", () => {
+    expect(formatResult(1e300)).toMatch(/^1\d{300}$/);
   });
 });

@@ -42,8 +42,14 @@ describe("<Calculator />", () => {
     const { user, display } = setup();
     await user.keyboard("79/6{Enter}");
     expect(display).toHaveTextContent(/^13\.16666667$/);
+    // 99998900001 is 11 digits: shown from the start, cut at the end.
     await user.keyboard("{Escape}999999*99999{Enter}");
-    expect(screen.getByRole("alert")).toHaveTextContent("Result is too large");
+    expect(display).toHaveTextContent(/^9999890000$/);
+    expect(display).toHaveAttribute("title", "99998900001");
+    expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+    // Typing after it starts a new number, shown normally.
+    await user.keyboard("12");
+    expect(display).toHaveTextContent(/^12$/);
   });
 
   it("calculates percentages like a desk calculator", async () => {
