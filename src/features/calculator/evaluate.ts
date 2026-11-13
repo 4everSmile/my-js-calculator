@@ -141,7 +141,7 @@ export function evaluate(expression: string): number {
 function toPlain(value: number, maxCells: number): string {
   const text = String(value);
   if (!text.includes("e")) return text;
-  // Tiny numbers become 0.000…; huge ones (≥ 1e21) stay in "e" form and the caller rejects them.
+  // Tiny numbers become 0.000…; huge ones (≥ 1e21) stay in "e" form and the caller handles them.
   const sign = value < 0 ? 1 : 0;
   const fixed = value.toFixed(maxCells - 1 - sign).replace(/\.?0+$/, "");
   return fixed === "-0" ? "0" : fixed;
@@ -151,14 +151,17 @@ function toPlain(value: number, maxCells: number): string {
  * Rounds a result to fit the display, like a real calculator: as many significant
  * digits as fit in `maxCells` (a "-" takes a cell, "." doesn't). Also trims
  * floating-point noise, e.g. 0.1 + 0.2 → "0.3" and 79 / 6 → "13.16666667".
- * Throws if the whole-number part alone doesn't fit.
+ *
+ * If even the whole-number part is too long, returns it in full (rounded to a whole
+ * number, never "e" notation); the display then shows its first cells.
  */
 export function formatResult(value: number, maxCells = LCD_CELLS): string {
   for (let digits = maxCells; digits >= 1; digits--) {
     const text = toPlain(Number.parseFloat(value.toPrecision(digits)), maxCells);
     const wholePart = text.split(".")[0] ?? text;
     if (wholePart.length > maxCells || text.includes("e")) {
-      throw new EvaluationError("Result is too large");
+      // BigInt prints every digit of the number, even past 1e21.
+      return BigInt(Math.round(value)).toString();
     }
     if (cellCount(text) <= maxCells) return text;
   }

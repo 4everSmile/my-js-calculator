@@ -28,6 +28,7 @@ export function Calculator() {
             expression={state.expression}
             error={state.error}
             hasMemory={state.memory !== 0}
+            isResult={state.showingResult}
           />
         </CardHeader>
         <CardContent className="px-4 pb-3 sm:px-5">

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import { LCD_CELLS } from "./lcd";
 
 
@@ -32,6 +33,20 @@ function lastCells(tokens: string[], cells: number): string[] {
     start--;
   }
   return tokens.slice(start);
+}
+
+/** First `cells` LCD cells — used for results, so a too-long result is cut at the end. */
+function firstCells(tokens: string[], cells: number): string[] {
+  let used = 0;
+  let end = 0;
+  while (end < tokens.length) {
+    const isDot = tokens[end] === ".";
+    if (!isDot && used === cells) break;
+    if (!isDot) used++;
+    end++;
+  }
+  // Don't end on a bare decimal point.
+  return tokens[end - 1] === "." ? tokens.slice(0, end - 1) : tokens.slice(0, end);
 }
 
 /** Groups digits into DSEG text runs and renders operators as one-cell glyphs. */
@@ -70,11 +85,18 @@ type DisplayProps = {
   expression: string;
   error: string | null;
   hasMemory: boolean;
+  /**
+   * True when showing a result: show its first cells, cutting a too-long result at
+   * the end. While typing, the last cells are shown so the newest input is visible.
+   */
+  isResult: boolean;
 };
 
-export function Display({ expression, error, hasMemory }: DisplayProps) {
+export function Display({ expression, error, hasMemory, isResult }: DisplayProps) {
   const text = expression || "0";
-  const visible = lastCells(tokenize(text), LCD_CELLS);
+  const tokens = tokenize(text);
+  const visible = isResult ? firstCells(tokens, LCD_CELLS) : lastCells(tokens, LCD_CELLS);
+  const isCut = visible.length < tokens.length;
 
   return (
     <div className="min-w-0 rounded-[1.75rem] bg-calc-bezel p-3 shadow-[inset_0_2px_4px_rgb(0_0_0/0.08)]">
@@ -86,6 +108,18 @@ export function Display({ expression, error, hasMemory }: DisplayProps) {
           {hasMemory ? "M" : ""}
           {error ? " E" : ""}
         </span>
+        {isCut && (
+          // Marks hidden digits: at the end for a result, at the start while typing.
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute top-1 font-sans text-sm leading-none",
+              isResult ? "right-3" : "left-8",
+            )}
+          >
+            {isResult ? "▸" : "◂"}
+          </span>
+        )}
         {/*
           Size the digits from the LCD width so LCD_CELLS always fit: each DSEG14 cell is
           0.816em wide, so 10 cells = 8.16em → font-size ≤ 100cqw / 8.16 ≈ 12.25cqw.

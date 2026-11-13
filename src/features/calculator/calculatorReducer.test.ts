@@ -86,9 +86,10 @@ describe("calculatorReducer", () => {
       expect(state.memory).toBe(0);
     });
 
-    it("MRC shows an error when memory is too large to display", () => {
+    it("MRC recalls memory too large for the display in full", () => {
       const state = run([{ type: "memoryRecall" }], { ...initialState, memory: 1e12 });
-      expect(state.error).toBe("Result is too large");
+      expect(state.expression).toBe("1000000000000");
+      expect(state.error).toBeNull();
     });
 
     it("AC keeps memory", () => {
