@@ -1,45 +1,60 @@
-import type { CalculatorAction } from "./calculatorReducer.ts";
+import type { CalculatorAction } from "./calculatorReducer";
+
+/** Keycap colour, one per row — mirrors the pastel calculator design. */
+export type KeyTone = "pink" | "yellow" | "green" | "lavender" | "blue";
 
 export type KeyDef = {
   label: string;
   ariaLabel?: string;
   action: CalculatorAction;
-  variant?: "clear" | "operator" | "equals";
-  wide?: boolean;
+  tone: KeyTone;
 };
 
-const digit = (value: string, ariaLabel?: string): KeyDef => ({
-  label: value,
+const input = (tone: KeyTone, value: string, label = value, ariaLabel?: string): KeyDef => ({
+  label,
   action: { type: "input", value },
+  tone,
   ...(ariaLabel ? { ariaLabel } : {}),
 });
 
-const operator = (value: string, ariaLabel: string): KeyDef => ({
-  ...digit(value, ariaLabel),
-  variant: "operator",
-});
+const command = (
+  tone: KeyTone,
+  label: string,
+  ariaLabel: string,
+  type: Exclude<CalculatorAction["type"], "input">,
+): KeyDef => ({ label, ariaLabel, tone, action: { type } as CalculatorAction });
 
-/** Keypad layout, row by row — mirrors the original calculator. */
+/** 5×5 keypad, row by row. */
 export const KEYPAD: readonly KeyDef[] = [
-  { label: "C", ariaLabel: "Clear", action: { type: "clear" }, variant: "clear" },
-  operator("**", "Power"),
-  operator("%", "Modulo"),
-  operator("/", "Divide"),
-  digit("7"),
-  digit("8"),
-  digit("9"),
-  operator("*", "Multiply"),
-  digit("4"),
-  digit("5"),
-  digit("6"),
-  operator("-", "Subtract"),
-  digit("1"),
-  digit("2"),
-  digit("3"),
-  operator("+", "Add"),
-  digit(".", "Decimal point"),
-  digit("0"),
-  { label: "=", ariaLabel: "Equals", action: { type: "evaluate" }, variant: "equals", wide: true },
+  command("pink", "MRC", "Memory recall", "memoryRecall"),
+  command("pink", "M−", "Memory subtract", "memorySubtract"),
+  command("pink", "M+", "Memory add", "memoryAdd"),
+  command("pink", "√", "Square root", "sqrt"),
+  input("pink", "%", "%", "Modulo"),
+
+  command("yellow", "→", "Backspace", "backspace"),
+  input("yellow", "7"),
+  input("yellow", "8"),
+  input("yellow", "9"),
+  input("yellow", "/", "÷", "Divide"),
+
+  command("green", "CE", "Clear entry", "clearEntry"),
+  input("green", "4"),
+  input("green", "5"),
+  input("green", "6"),
+  input("green", "*", "×", "Multiply"),
+
+  command("lavender", "AC", "All clear", "clear"),
+  input("lavender", "1"),
+  input("lavender", "2"),
+  input("lavender", "3"),
+  input("lavender", "-", "−", "Subtract"),
+
+  input("blue", "0"),
+  input("blue", "**", "**", "Power"),
+  input("blue", ".", "·", "Decimal point"),
+  command("blue", "=", "Equals", "evaluate"),
+  input("blue", "+", "+", "Add"),
 ];
 
 /** Maps physical keyboard keys to calculator actions. */
@@ -48,6 +63,7 @@ export function actionFromKey(key: string): CalculatorAction | null {
   if (key === "^") return { type: "input", value: "**" };
   if (key === "Enter" || key === "=") return { type: "evaluate" };
   if (key === "Backspace") return { type: "backspace" };
-  if (key === "Escape" || key === "Delete") return { type: "clear" };
+  if (key === "Delete") return { type: "clearEntry" };
+  if (key === "Escape") return { type: "clear" };
   return null;
 }
